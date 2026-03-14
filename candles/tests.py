@@ -1,5 +1,6 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
+from .models import Candle
 
 class CandleAPITest(APITestCase):
     def test_create_candle(self):
@@ -15,3 +16,28 @@ class CandleAPITest(APITestCase):
         }
         response = self.client.post('/api/candles/', payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_all_candles(self):
+        # 1. Create a dummy candle in the test database
+        Candle.objects.create(
+            symbol="ETH/USDT",
+            timeframe="1d",
+            open_price="3000.00",
+            high_price="3100.00",
+            low_price="2950.00",
+            close_price="3050.00",
+            volume="500.25",
+            timestamp="2026-03-10T00:00:00Z"
+        )
+
+        # 2. Make a GET request to the list endpoint
+        response = self.client.get('/api/candles/')
+
+        # 3. Assert the response is 200 OK
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # 4. Assert that the list contains exactly 1 candle
+        self.assertEqual(len(response.data), 1)
+        
+        # 5. Assert the symbol matches what we created
+        self.assertEqual(response.data[0]['symbol'], "ETH/USDT")
